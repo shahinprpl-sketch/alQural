@@ -1,0 +1,32 @@
+{
+  "name": "al-quran-bangla-ai",
+  "version": "1.2.0",
+  "private": false,
+  "description": "A comprehensive Al-Quran application with AI-powered Tafsir and Search for Bangla speakers.",
+  "author": "Md Shahin <shahin.Prpl@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shahin-prpl/al-quran-bangla-ai.git"
+  },
+  "homepage": "https://shahin-prpl.github.io/al-quran-bangla-ai",
+  "dependencies": {
+    "@google/genai": "^1.38.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "scripts": {
+    "start": "npx serve -s .",
+    "build": "echo 'Ready for deployment'"
+  },
+  "keywords": [
+    "quran",
+    "islam",
+    "bangla",
+    "ai",
+    "gemini",
+    "tafsir",
+    "pwa",
+    "android"
+  ]
+}

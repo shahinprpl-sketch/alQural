@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://shahin-prpl.github.io/al-quran-bangla-ai/sitemap.xml
