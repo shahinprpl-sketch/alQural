@@ -2,75 +2,51 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Language } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// The app will run fine if process.env.API_KEY is missing, only AI features will be disabled.
+const getAiClient = () => {
+  if (!process.env.API_KEY) return null;
+  return new GoogleGenAI({ apiKey: process.env.API_KEY });
+};
 
 export async function getTafsir(surahNumber: number, ayahNumber: number, arabic: string, originalTranslation: string, language: Language) {
   const cacheKey = `tafsir_${language}_${surahNumber}_${ayahNumber}`;
   
-  // Try to get from local cache first
   try {
     const cached = localStorage.getItem(cacheKey);
-    if (cached) {
-      return cached;
-    }
-  } catch (e) {
-    console.warn("Local storage not available for caching", e);
-  }
+    if (cached) return cached;
+  } catch (e) {}
 
-  const langMap = {
-    bn: "Bangla",
-    en: "English",
-    hi: "Hindi",
-    ar: "Arabic"
-  };
+  const ai = getAiClient();
+  if (!ai) return "AI Tafsir requires an active service connection. Please check your internet or settings.";
 
+  const langMap = { bn: "Bangla", en: "English", hi: "Hindi", ar: "Arabic" };
   const targetLang = langMap[language];
 
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Provide a short, easy-to-understand ${targetLang} Tafsir (explanation) for the following Quranic verse. 
-      Surah: ${surahNumber}, Ayah: ${ayahNumber}
-      Arabic: ${arabic}
-      Existing Translation Reference: ${originalTranslation}
-      Please focus on context, spiritual lesson, and practical guidance. Format it in clean Markdown. The output MUST be in ${targetLang}.`,
-      config: {
-        temperature: 0.7,
-        topP: 0.95,
-      },
+      contents: `Provide a short, easy-to-understand ${targetLang} Tafsir for: Surah ${surahNumber}, Ayah ${ayahNumber}. Arabic: ${arabic}. Translation: ${originalTranslation}. Focus on spiritual lessons.`,
+      config: { temperature: 0.7, topP: 0.95 },
     });
 
-    const result = response.text || "Explanation not found. Please try again.";
-    
-    // Save to cache if response is valid
-    if (response.text) {
-      try {
-        localStorage.setItem(cacheKey, result);
-      } catch (e) {
-        console.warn("Failed to save Tafsir to cache", e);
-      }
-    }
-
+    const result = response.text || "Explanation not found.";
+    try { localStorage.setItem(cacheKey, result); } catch (e) {}
     return result;
   } catch (error) {
     console.error("Gemini Error:", error);
-    return "Error loading Tafsir. Please check your internet connection.";
+    return "This feature is currently unavailable. You can still read the translation above.";
   }
 }
 
 export async function searchQuranAI(query: string, language: Language) {
-  const langMap = {
-    bn: "Bangla",
-    en: "English",
-    hi: "Hindi",
-    ar: "Arabic"
-  };
-  const targetLang = langMap[language];
+  const ai = getAiClient();
+  if (!ai) return [];
 
+  const langMap = { bn: "Bangla", en: "English", hi: "Hindi", ar: "Arabic" };
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Search for Quranic verses related to: "${query}". Return the result as a JSON array of objects with 'surah', 'ayah', 'text_arabic', 'text_target_lang' (translation in ${targetLang}), and 'reason' (why this verse is relevant in ${targetLang}). Answer completely in ${targetLang}.`,
+      contents: `Search for Quranic verses related to: "${query}". Return as JSON array of objects with 'surah', 'ayah', 'text_arabic', 'text_target_lang', and 'reason'. Language: ${langMap[language]}.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -89,10 +65,8 @@ export async function searchQuranAI(query: string, language: Language) {
         }
       }
     });
-
     return JSON.parse(response.text);
   } catch (error) {
-    console.error("Gemini Search Error:", error);
     return [];
   }
 }

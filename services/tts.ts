@@ -1,18 +1,10 @@
 
 import { GoogleGenAI, Modality } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-async function decodeAudioData(
-  data: Uint8Array,
-  ctx: AudioContext,
-  sampleRate: number,
-  numChannels: number,
-): Promise<AudioBuffer> {
+async function decodeAudioData(data: Uint8Array, ctx: AudioContext, sampleRate: number, numChannels: number): Promise<AudioBuffer> {
   const dataInt16 = new Int16Array(data.buffer);
   const frameCount = dataInt16.length / numChannels;
   const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
-
   for (let channel = 0; channel < numChannels; channel++) {
     const channelData = buffer.getChannelData(channel);
     for (let i = 0; i < frameCount; i++) {
@@ -26,55 +18,35 @@ function decode(base64: string) {
   const binaryString = atob(base64);
   const len = binaryString.length;
   const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
+  for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); }
   return bytes;
 }
 
 export async function speakSurahName(englishName: string, arabicName: string, voice: string = 'Kore'): Promise<void> {
-  return new Promise(async (resolve, reject) => {
+  if (!process.env.API_KEY) return Promise.resolve();
+  
+  return new Promise(async (resolve) => {
     try {
-      const prompt = `Pronounce the name of this Surah: ${englishName} (${arabicName}). Say it clearly.`;
-      
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: prompt }] }],
+        contents: [{ parts: [{ text: `Pronounce Surah ${englishName}` }] }],
         config: {
           responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: voice },
-            },
-          },
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } },
         },
       });
 
       const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
       if (base64Audio) {
         const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-        const audioBuffer = await decodeAudioData(
-          decode(base64Audio),
-          audioContext,
-          24000,
-          1,
-        );
+        const audioBuffer = await decodeAudioData(decode(base64Audio), audioContext, 24000, 1);
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(audioContext.destination);
-        
-        source.onended = () => {
-          audioContext.close();
-          resolve();
-        };
-
+        source.onended = () => { audioContext.close(); resolve(); };
         source.start();
-      } else {
-        resolve();
-      }
-    } catch (error) {
-      console.error("TTS Pronunciation Error:", error);
-      resolve(); // Resolve anyway to not block the chain if AI fails
-    }
+      } else { resolve(); }
+    } catch (error) { resolve(); }
   });
 }
