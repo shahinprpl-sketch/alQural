@@ -26,6 +26,7 @@ export async function speakSurahName(englishName: string, arabicName: string, vo
   if (!process.env.API_KEY) return Promise.resolve();
   
   return new Promise(async (resolve) => {
+    let audioContext: AudioContext | null = null;
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
@@ -39,14 +40,26 @@ export async function speakSurahName(englishName: string, arabicName: string, vo
 
       const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
       if (base64Audio) {
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+        audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
         const audioBuffer = await decodeAudioData(decode(base64Audio), audioContext, 24000, 1);
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(audioContext.destination);
-        source.onended = () => { audioContext.close(); resolve(); };
+        
+        source.onended = () => { 
+          if (audioContext && audioContext.state !== 'closed') {
+            audioContext.close().catch(() => {});
+            audioContext = null;
+          }
+          resolve(); 
+        };
         source.start();
       } else { resolve(); }
-    } catch (error) { resolve(); }
+    } catch (error) { 
+      if (audioContext && audioContext.state !== 'closed') {
+        audioContext.close().catch(() => {});
+      }
+      resolve(); 
+    }
   });
 }

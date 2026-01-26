@@ -56,11 +56,10 @@ const AyahView: React.FC<AyahViewProps> = ({ surah, settings, favorites, onToggl
   const handleSpeakSurahName = async () => {
     if (isSpeakingName) return;
     setIsSpeakingName(true);
-    await speakSurahName(surah.englishName, surah.name, settings.liveVoiceName);
+    await speakSurahName(surah.englishName, surah.name, settings.liveVoiceName || 'Kore');
     setIsSpeakingName(false);
   };
 
-  // Subtle interaction feedback sound
   const playInteractionSound = () => {
     try {
       const context = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -80,7 +79,11 @@ const AyahView: React.FC<AyahViewProps> = ({ surah, settings, favorites, onToggl
       osc.start();
       osc.stop(context.currentTime + 0.05);
       
-      setTimeout(() => context.close(), 100);
+      setTimeout(() => {
+        if (context.state !== 'closed') {
+          context.close().catch(() => {});
+        }
+      }, 150);
     } catch (e) {}
   };
 

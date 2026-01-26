@@ -79,7 +79,6 @@ const LiveVoiceView: React.FC<LiveVoiceViewProps> = ({ t, settings }) => {
   const handleOpenKeySelector = async () => {
     if (typeof (window as any).aistudio?.openSelectKey === 'function') {
       await (window as any).aistudio.openSelectKey();
-      // Assume success as per guidelines to avoid race condition
       setHasApiKey(true);
     } else {
       alert("Please configure an API Key in your environment to use this feature.");
@@ -98,21 +97,35 @@ const LiveVoiceView: React.FC<LiveVoiceViewProps> = ({ t, settings }) => {
     if (status !== 'error') setStatus('idle');
     
     if (sessionRef.current) {
-      sessionRef.current.close();
+      try { sessionRef.current.close(); } catch(e) {}
       sessionRef.current = null;
     }
+    
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach(track => track.stop());
       mediaStreamRef.current = null;
     }
+
     for (const source of sourcesRef.current.values()) {
       try { source.stop(); } catch(e) {}
     }
     sourcesRef.current.clear();
     nextStartTimeRef.current = 0;
     
-    if (audioContextInRef.current) audioContextInRef.current.close();
-    if (audioContextOutRef.current) audioContextOutRef.current.close();
+    // Safety check before closing contexts
+    if (audioContextInRef.current) {
+      if (audioContextInRef.current.state !== 'closed') {
+        audioContextInRef.current.close().catch(() => {});
+      }
+      audioContextInRef.current = null;
+    }
+    
+    if (audioContextOutRef.current) {
+      if (audioContextOutRef.current.state !== 'closed') {
+        audioContextOutRef.current.close().catch(() => {});
+      }
+      audioContextOutRef.current = null;
+    }
   };
 
   const startSession = async () => {
@@ -131,7 +144,6 @@ const LiveVoiceView: React.FC<LiveVoiceViewProps> = ({ t, settings }) => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
 
-      // Always create a fresh instance for current key
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const inCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
       const outCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
@@ -169,14 +181,12 @@ const LiveVoiceView: React.FC<LiveVoiceViewProps> = ({ t, settings }) => {
           onmessage: async (message: LiveServerMessage) => {
             if (!isActiveRef.current) return;
             
-            // Handle output transcription
             if (message.serverContent?.outputTranscription) {
               setTranscription(prev => prev + message.serverContent!.outputTranscription!.text);
             }
             
-            // Handle audio output
             const base64Audio = message.serverContent?.modelTurn?.parts?.find(p => p.inlineData)?.inlineData?.data;
-            if (base64Audio) {
+            if (base64Audio && outCtx.state !== 'closed') {
               nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outCtx.currentTime);
               const audioBuffer = await decodeAudioData(decode(base64Audio), outCtx, 24000, 1);
               const source = outCtx.createBufferSource();
@@ -203,7 +213,7 @@ const LiveVoiceView: React.FC<LiveVoiceViewProps> = ({ t, settings }) => {
         },
         config: {
           responseModalities: [Modality.AUDIO],
-          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: settings.liveVoiceName || 'Puck' } } },
+          speechConfig: { voiceConfig: { voiceName: settings.liveVoiceName || 'Puck' } },
           systemInstruction: `You are a helpful and wise Islamic scholar assistant. You are conversing with a user in ${settings.language}. Be respectful, concise, and base your answers on authentic sources. Use a natural conversational tone.`,
         },
       });
@@ -223,7 +233,6 @@ const LiveVoiceView: React.FC<LiveVoiceViewProps> = ({ t, settings }) => {
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col items-center justify-center bg-white dark:bg-slate-900 rounded-[3rem] shadow-xl border border-slate-100 dark:border-slate-800 relative my-4 overflow-hidden p-8">
-        {/* Animated Visualization */}
         <div className="relative">
           {status === 'connected' && (
             <>
@@ -283,12 +292,6 @@ const LiveVoiceView: React.FC<LiveVoiceViewProps> = ({ t, settings }) => {
             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/></svg>
             {t.voice_btn_start || "Start Voice Chat"}
           </button>
-        )}
-        
-        {!hasApiKey && (
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center px-4">
-            AI features require a paid Gemini API key from <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="text-emerald-600 underline">Google AI Studio</a>.
-          </p>
         )}
       </div>
     </div>
