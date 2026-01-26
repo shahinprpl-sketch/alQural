@@ -5,18 +5,172 @@ interface PrayerTimeViewProps {
   t: any;
 }
 
+interface PrayerGuidance {
+  rakats: { type: string, count: number }[];
+  duas: { title: string, arabic: string, translation: string }[];
+}
+
+const PrayerGuidanceModal: React.FC<{ 
+  prayer: any; 
+  onClose: () => void; 
+  t: any;
+  language: string;
+}> = ({ prayer, onClose, t, language }) => {
+  // Static guidance data
+  const PRAYER_GUIDE: Record<string, PrayerGuidance> = {
+    Fajr: {
+      rakats: [
+        { type: language === 'bn' ? 'সুন্নাত' : 'Sunnah', count: 2 },
+        { type: language === 'bn' ? 'ফরজ' : 'Farz', count: 2 }
+      ],
+      duas: [
+        {
+          title: language === 'bn' ? 'সকাল ও সন্ধ্যার দোয়া' : 'Morning Adhkar',
+          arabic: 'اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا وَبِكَ نَحْيَا وَبِكَ نَمُوتُ وَإِلَيْكَ النُّشُورُ',
+          translation: language === 'bn' ? 'হে আল্লাহ! আপনার রহমতেই আমরা সকালে উপনীত হয়েছি, আপনার রহমতেই সন্ধ্যায় উপনীত হয়েছি...' : 'O Allah, by You we enter the morning and by You we enter the evening...'
+        }
+      ]
+    },
+    Dhuhr: {
+      rakats: [
+        { type: language === 'bn' ? 'সুন্নাত' : 'Sunnah', count: 4 },
+        { type: language === 'bn' ? 'ফরজ' : 'Farz', count: 4 },
+        { type: language === 'bn' ? 'সুন্নাত' : 'Sunnah', count: 2 },
+        { type: language === 'bn' ? 'নফল' : 'Nafl', count: 2 }
+      ],
+      duas: [
+        {
+          title: language === 'bn' ? 'সালাত শেষে দোয়া' : 'After Prayer',
+          arabic: 'أَسْتَغْفِرُ اللَّهَ ، أَسْتَغْفِرُ اللَّهَ ، أَسْتَغْفِرُ اللَّهَ',
+          translation: language === 'bn' ? 'আমি আল্লাহর কাছে ক্ষমা চাই (৩ বার)' : 'I ask Allah for forgiveness (3 times)'
+        }
+      ]
+    },
+    Asr: {
+      rakats: [
+        { type: language === 'bn' ? 'সুন্নাত' : 'Sunnah', count: 4 },
+        { type: language === 'bn' ? 'ফরজ' : 'Farz', count: 4 }
+      ],
+      duas: [
+        {
+          title: language === 'bn' ? 'কুরআন থেকে দোয়া' : 'Quranic Dua',
+          arabic: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ',
+          translation: language === 'bn' ? 'হে আমাদের পালনকর্তা! আমাদের দুনিয়ায় কল্যাণ দিন এবং আখেরাতেও কল্যাণ দিন...' : 'Our Lord, give us in this world that which is good and in the Hereafter that which is good...'
+        }
+      ]
+    },
+    Maghrib: {
+      rakats: [
+        { type: language === 'bn' ? 'ফরজ' : 'Farz', count: 3 },
+        { type: language === 'bn' ? 'সুন্নাত' : 'Sunnah', count: 2 },
+        { type: language === 'bn' ? 'নফল' : 'Nafl', count: 2 }
+      ],
+      duas: [
+        {
+          title: language === 'bn' ? 'ইফতারের দোয়া' : 'Iftar Dua',
+          arabic: 'ذَهَبَ الظَّمَأُ وَابْتَلَّتِ الْعُرُوقُ وَثَبَتَ الأَجْرُ إِنْ شَاءَ اللَّهُ',
+          translation: language === 'bn' ? 'তৃষ্ণা দূর হলো, শিরাগুলো সিক্ত হলো এবং আল্লাহর ইচ্ছায় পুরস্কার নির্ধারিত হলো।' : 'The thirst is gone, the veins are moistened and the reward is confirmed, if Allah wills.'
+        }
+      ]
+    },
+    Isha: {
+      rakats: [
+        { type: language === 'bn' ? 'সুন্নাত' : 'Sunnah', count: 4 },
+        { type: language === 'bn' ? 'ফরজ' : 'Farz', count: 4 },
+        { type: language === 'bn' ? 'সুন্নাত' : 'Sunnah', count: 2 },
+        { type: language === 'bn' ? 'নফল' : 'Nafl', count: 2 },
+        { type: language === 'bn' ? 'বিতর' : 'Witr', count: 3 }
+      ],
+      duas: [
+        {
+          title: language === 'bn' ? 'দোয়া কুনুত (বিতর)' : 'Dua Qunut (Witr)',
+          arabic: 'اللَّهُمَّ اهْدِنِي فِيمَنْ هَدَيْتَ وَعَافِنِي فِيمَنْ عَافَيْتَ وَتَوَلَّنِي فِيمَنْ تَوَلَّيْتَ',
+          translation: language === 'bn' ? 'হে আল্লাহ! আপনি যাদের হেদায়াত করেছেন তাদের মধ্যে আমাকেও হেদায়াত করুন...' : 'O Allah, guide me among those You have guided, pardon me among those You have pardoned...'
+        }
+      ]
+    }
+  };
+
+  const info = PRAYER_GUIDE[prayer.id];
+  if (!info) return null;
+
+  return (
+    <div className="fixed inset-0 z-[2000] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose}></div>
+      <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[3rem] sm:rounded-[3rem] shadow-2xl relative z-10 animate-in slide-in-from-bottom-10 duration-500 overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="p-8 pb-4 shrink-0 flex justify-between items-start">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-emerald-600 text-white rounded-[1.5rem] flex items-center justify-center shadow-lg">
+              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d={prayer.icon}/></svg>
+            </div>
+            <div>
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">{prayer.label}</h3>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.nav_prayer} {language === 'bn' ? 'নির্দেশিকা' : 'Guide'}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-full text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+
+        <div className="p-8 pt-4 overflow-y-auto space-y-8 flex-1 scrollbar-hide">
+          {/* Rakats Section */}
+          <section className="space-y-4">
+            <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400 border-b border-emerald-100 dark:border-emerald-800/50 pb-2">
+              {language === 'bn' ? 'রাকাত সংখ্যা' : 'Rakat Breakdown'}
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              {info.rakats.map((rakat, i) => (
+                <div key={i} className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl flex justify-between items-center border border-slate-100 dark:border-slate-800">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{rakat.type}</span>
+                  <span className="text-xl font-black text-slate-900 dark:text-white">{rakat.count}</span>
+                </div>
+              ))}
+              <div className="col-span-2 bg-emerald-600 p-4 rounded-2xl flex justify-between items-center shadow-lg shadow-emerald-900/20">
+                <span className="text-xs font-black text-white/80 uppercase tracking-widest">{language === 'bn' ? 'মোট রাকাত' : 'Total Rakats'}</span>
+                <span className="text-2xl font-black text-white">{info.rakats.reduce((acc, curr) => acc + curr.count, 0)}</span>
+              </div>
+            </div>
+          </section>
+
+          {/* Duas Section */}
+          <section className="space-y-4">
+            <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400 border-b border-emerald-100 dark:border-emerald-800/50 pb-2">
+              {language === 'bn' ? 'গুরুত্বপূর্ণ দোয়া' : 'Important Supplications'}
+            </h4>
+            <div className="space-y-4">
+              {info.duas.map((dua, i) => (
+                <div key={i} className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 space-y-6">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{dua.title}</p>
+                  </div>
+                  <p className="arabic-text text-3xl text-right leading-[1.8] text-slate-900 dark:text-slate-100">{dua.arabic}</p>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-50 dark:border-slate-800 pt-4">{dua.translation}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <div className="p-8 pt-4 bg-slate-50 dark:bg-slate-950/50 shrink-0">
+          <button onClick={onClose} className="w-full py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] active:scale-95 transition-all shadow-xl">
+            {language === 'bn' ? 'বন্ধ করুন' : 'Got it, Close'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const RamadanCountdown: React.FC<{ t: any; isRamadan: boolean }> = ({ t, isRamadan }) => {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
-    // Dynamically calculate the target date for the next Ramadan.
-    // Based on the user's current context (1447 AH), the next Ramadan is approx Feb 18, 2026.
     const calculateTarget = () => {
       const ramadan2025 = new Date('2025-03-01T00:00:00').getTime();
       const ramadan2026 = new Date('2026-02-18T00:00:00').getTime();
       const now = new Date().getTime();
-      
-      // If 2025 has passed, target 2026
       return now < ramadan2025 ? ramadan2025 : ramadan2026;
     };
 
@@ -90,6 +244,7 @@ const PrayerTimeView: React.FC<PrayerTimeViewProps> = ({ t }) => {
   const [locationName, setLocationName] = useState<string>('');
   const [manualCity, setManualCity] = useState<string>(() => localStorage.getItem('quran_manual_city') || '');
   const [detectingGps, setDetectingGps] = useState(false);
+  const [selectedPrayer, setSelectedPrayer] = useState<any | null>(null);
 
   const fetchByAddress = async (address: string) => {
     setLoading(true);
@@ -249,7 +404,11 @@ const PrayerTimeView: React.FC<PrayerTimeViewProps> = ({ t }) => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {prayers.map((p) => (
-              <div key={p.id} className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between group transition-all">
+              <button 
+                key={p.id} 
+                onClick={() => setSelectedPrayer(p)}
+                className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between group transition-all text-left w-full active:scale-95"
+              >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-slate-50 dark:bg-slate-900/50 text-slate-400 rounded-[1.25rem] flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-all">
                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d={p.icon}/></svg>
@@ -257,13 +416,23 @@ const PrayerTimeView: React.FC<PrayerTimeViewProps> = ({ t }) => {
                   <div>
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{p.id}</p>
                     <h3 className="text-sm font-black text-slate-800 dark:text-white leading-tight">{p.label}</h3>
+                    <p className="text-[8px] font-bold text-emerald-500/60 uppercase tracking-widest mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Tap for Guide</p>
                   </div>
                 </div>
                 <div className="text-xl font-black text-slate-900 dark:text-slate-100 tabular-nums">{timings ? timings[p.key] : '--:--'}</div>
-              </div>
+              </button>
             ))}
           </div>
         </>
+      )}
+
+      {selectedPrayer && (
+        <PrayerGuidanceModal 
+          prayer={selectedPrayer} 
+          onClose={() => setSelectedPrayer(null)} 
+          t={t}
+          language={locationName.toLowerCase().includes('dhaka') ? 'bn' : 'bn'} // Priority given to current translation state logic
+        />
       )}
     </div>
   );
