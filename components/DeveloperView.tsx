@@ -83,12 +83,24 @@ const DeveloperView: React.FC<DeveloperViewProps> = ({ onBack, t }) => {
       </div>
 
       <div className="p-6 space-y-6 flex-1">
-        <div className="bg-gradient-to-br from-rose-600 to-rose-700 dark:from-rose-800 dark:to-rose-950 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden group">
+        {/* Highlighted Donation Section */}
+        <div className="bg-gradient-to-br from-rose-600 to-rose-700 dark:from-rose-800 dark:to-rose-950 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden group ring-4 ring-rose-500/30 animate-pulse-subtle">
+            {/* Animated Shine Effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shine transition-all"></div>
+            
+            {/* Decorative Heart Icon in the Highlighted Area */}
+            <div className="absolute top-8 right-8 text-white/20 group-hover:text-white/40 transition-colors animate-float">
+               <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            </div>
+
             <div className="relative z-10">
-              <span className="inline-block bg-white/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 backdrop-blur-md">Sadaqah Jariyah</span>
+              <div className="flex items-center gap-2 mb-6">
+                <span className="inline-block bg-white/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md">Sadaqah Jariyah</span>
+                <span className="inline-block bg-amber-400 text-slate-900 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest">Featured</span>
+              </div>
               <h4 className="font-black text-2xl mb-4 leading-tight">{t.dev_donate_cta_title}</h4>
               <p className="text-xs text-white/80 leading-relaxed mb-10 font-medium">{t.dev_donate_cta_desc}</p>
-              <button onClick={() => setShowDonatePopup(true)} className="w-full bg-white text-rose-700 py-5 rounded-[1.75rem] font-black text-sm shadow-xl active:scale-[0.97] transition-all hover:bg-slate-50 flex items-center justify-center gap-3">
+              <button onClick={() => setShowDonatePopup(true)} className="w-full bg-white text-rose-700 py-5 rounded-[1.75rem] font-black text-sm shadow-[0_20px_40px_-10px_rgba(255,255,255,0.4)] active:scale-[0.97] transition-all hover:bg-slate-50 flex items-center justify-center gap-3">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                   {t.dev_donate_btn}
               </button>
@@ -105,12 +117,36 @@ const DeveloperView: React.FC<DeveloperViewProps> = ({ onBack, t }) => {
         </div>
       </div>
 
+      <style>{`
+        @keyframes shine {
+          0% { transform: translateX(-100%) skewX(-15deg); }
+          50% { transform: translateX(100%) skewX(-15deg); }
+          100% { transform: translateX(100%) skewX(-15deg); }
+        }
+        .animate-shine {
+          animation: shine 3s infinite linear;
+        }
+        @keyframes pulse-subtle {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.01); }
+        }
+        .animate-pulse-subtle {
+          animation: pulse-subtle 4s infinite ease-in-out;
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-10px) scale(1.1); }
+        }
+        .animate-float {
+          animation: float 3s infinite ease-in-out;
+        }
+      `}</style>
+
       {showDonatePopup && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-8 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setShowDonatePopup(false)}></div>
           <div className="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[3rem] shadow-2xl relative z-10 animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-hidden flex flex-col">
              
-             {/* Header Section with safer padding */}
              <div className="px-8 pt-10 pb-4 shrink-0 flex justify-between items-start">
                 <div className="space-y-1">
                   <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Select Sadaqah</h3>
@@ -121,7 +157,6 @@ const DeveloperView: React.FC<DeveloperViewProps> = ({ onBack, t }) => {
                 </button>
              </div>
              
-             {/* Content Section with scrollable area */}
              <div className="px-8 pb-10 space-y-4 overflow-y-auto scrollbar-hide flex-1">
                 <div className="bg-emerald-50 dark:bg-emerald-900/10 p-5 rounded-3xl border border-emerald-100/50 dark:border-emerald-800/50 mb-2">
                    <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 leading-relaxed text-center italic">
@@ -149,7 +184,6 @@ const DeveloperView: React.FC<DeveloperViewProps> = ({ onBack, t }) => {
                 ))}
              </div>
 
-             {/* Sticky Footer Button */}
              <div className="px-10 pb-10 pt-4 shrink-0 bg-white dark:bg-slate-800 border-t border-slate-50 dark:border-slate-700/50">
                 <button onClick={() => setShowDonatePopup(false)} className="w-full py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-[11px] uppercase tracking-[0.3em] rounded-2xl shadow-xl active:scale-95 transition-all">
                   Close

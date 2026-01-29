@@ -16,6 +16,7 @@ const SurahList: React.FC<SurahListProps> = ({ onSurahClick, settings, t }) => {
   const [activeSurahPlaying, setActiveSurahPlaying] = useState<number | null>(null);
   const [playState, setPlayState] = useState<'idle' | 'naming' | 'reciting'>('idle');
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const latestRequestRef = useRef<number | null>(null);
 
   useEffect(() => {
     const fetchSurahs = async () => {
@@ -37,43 +38,51 @@ const SurahList: React.FC<SurahListProps> = ({ onSurahClick, settings, t }) => {
   const handlePlaySequence = async (e: React.MouseEvent, surah: Surah) => {
     e.stopPropagation();
 
-    // Toggle off if clicking the currently playing surah
     if (activeSurahPlaying === surah.number) {
-      audioRef.current?.pause();
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
       setActiveSurahPlaying(null);
       setPlayState('idle');
+      latestRequestRef.current = null;
       return;
     }
 
-    // Stop and reset existing audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    
+    // Mark current intent
+    latestRequestRef.current = surah.number;
     setActiveSurahPlaying(surah.number);
     setPlayState('naming');
 
-    // 1. Speak Surah Name (AI TTS)
+    // Stop current audio immediately
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+      audioRef.current.load();
+    }
+
     try {
       await speakSurahName(surah.englishName, surah.name, settings.liveVoiceName);
     } catch (err) {
       console.warn("AI Naming failed, skipping to recitation");
     }
 
-    // Check if user still wants this surah after AI finishes naming
-    if (activeSurahPlaying === surah.number || activeSurahPlaying === null) {
+    // Check if this is still the surah we want to play
+    if (latestRequestRef.current === surah.number && audioRef.current) {
        setPlayState('reciting');
        const recitationUrl = `https://cdn.islamic.network/quran/audio-surah/128/${settings.reciter}/${surah.number}.mp3`;
        
-       if (audioRef.current) {
-         audioRef.current.src = recitationUrl;
-         audioRef.current.playbackRate = settings.playbackSpeed;
-         audioRef.current.play().catch(error => {
-           console.error("Recitation error:", error);
+       audioRef.current.src = recitationUrl;
+       audioRef.current.playbackRate = settings.playbackSpeed;
+       audioRef.current.load(); // Critical for 'no supported source' fix
+       
+       try {
+         await audioRef.current.play();
+       } catch (error) {
+         console.error("Recitation error:", error);
+         if (latestRequestRef.current === surah.number) {
            setPlayState('idle');
            setActiveSurahPlaying(null);
-         });
+         }
        }
     }
   };
@@ -96,10 +105,10 @@ const SurahList: React.FC<SurahListProps> = ({ onSurahClick, settings, t }) => {
     <div className="p-5 md:p-8 space-y-6 pb-32">
       <audio 
         ref={audioRef} 
-        crossOrigin="anonymous"
         onEnded={() => {
           setActiveSurahPlaying(null);
           setPlayState('idle');
+          latestRequestRef.current = null;
         }}
       />
 

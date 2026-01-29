@@ -197,7 +197,8 @@ const App: React.FC = () => {
         <div className="max-w-5xl mx-auto w-full px-5 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <div className="bg-emerald-600 dark:bg-emerald-500 p-2.5 rounded-xl cursor-pointer active:scale-95 transition-all" onClick={() => setViewMode('surahList')}>
+              {/* Changed onClick to navigate to 'developer' view instead of 'surahList' */}
+              <div className="bg-emerald-600 dark:bg-emerald-500 p-2.5 rounded-xl cursor-pointer active:scale-95 transition-all shadow-lg hover:shadow-emerald-500/30" onClick={() => setViewMode('developer')}>
                 <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
               </div>
               <div onClick={() => setViewMode('surahList')} className="cursor-pointer">

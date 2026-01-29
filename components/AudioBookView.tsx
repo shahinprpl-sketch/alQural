@@ -20,7 +20,6 @@ const AudioBookView: React.FC<AudioBookViewProps> = ({ settings, t }) => {
 
   const localizedReciters = getLocalizedReciters(settings.language);
 
-  // Fetch Surahs dynamically
   useEffect(() => {
     const fetchSurahs = async () => {
       try {
@@ -38,13 +37,13 @@ const AudioBookView: React.FC<AudioBookViewProps> = ({ settings, t }) => {
     fetchSurahs();
   }, []);
 
-  // Sync audio with settings changes (Reciter or Speed)
   useEffect(() => {
     if (playingSurah && isPlaying && audioRef.current) {
       const currentTime = audioRef.current.currentTime;
       const audioUrl = `https://cdn.islamic.network/quran/audio-surah/128/${settings.reciter}/${playingSurah.number}.mp3`;
       audioRef.current.src = audioUrl;
       audioRef.current.playbackRate = settings.playbackSpeed;
+      audioRef.current.load();
       audioRef.current.currentTime = currentTime;
       audioRef.current.play().catch(e => {
         console.warn("Autoplay failed after reciter change", e);
@@ -73,6 +72,7 @@ const AudioBookView: React.FC<AudioBookViewProps> = ({ settings, t }) => {
     if (audioRef.current) {
       audioRef.current.src = audioUrl;
       audioRef.current.playbackRate = settings.playbackSpeed;
+      audioRef.current.load();
       audioRef.current.play().catch(e => {
         console.error("Playback error", e);
         setAudioError("This Surah is currently unavailable for this Reciter.");
@@ -134,7 +134,6 @@ const AudioBookView: React.FC<AudioBookViewProps> = ({ settings, t }) => {
                <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">{t.audio_subtitle}</p>
             </div>
             
-            {/* Localized Reciter Selection Dropdown */}
             <div className="w-full md:w-auto space-y-2">
               <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest block ml-1">{t.settings_reciter}</label>
               <div className="relative">
