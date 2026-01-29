@@ -8,7 +8,6 @@ interface LiveVoiceViewProps {
   settings: AppSettings;
 }
 
-// Audio Helpers
 function decode(base64: string) {
   const binaryString = atob(base64);
   const len = binaryString.length;
@@ -61,9 +60,7 @@ const LiveVoiceView: React.FC<LiveVoiceViewProps> = ({ t, settings }) => {
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
   const sessionRef = useRef<any>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Check for API Key selection
   useEffect(() => {
     const checkKey = async () => {
       if (typeof (window as any).aistudio?.hasSelectedApiKey === 'function') {
@@ -84,12 +81,6 @@ const LiveVoiceView: React.FC<LiveVoiceViewProps> = ({ t, settings }) => {
       alert("Please configure an API Key in your environment to use this feature.");
     }
   };
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [transcription]);
 
   const stopSession = () => {
     isActiveRef.current = false;
@@ -112,18 +103,13 @@ const LiveVoiceView: React.FC<LiveVoiceViewProps> = ({ t, settings }) => {
     sourcesRef.current.clear();
     nextStartTimeRef.current = 0;
     
-    // Safety check before closing contexts
     if (audioContextInRef.current) {
-      if (audioContextInRef.current.state !== 'closed') {
-        audioContextInRef.current.close().catch(() => {});
-      }
+      if (audioContextInRef.current.state !== 'closed') audioContextInRef.current.close().catch(() => {});
       audioContextInRef.current = null;
     }
     
     if (audioContextOutRef.current) {
-      if (audioContextOutRef.current.state !== 'closed') {
-        audioContextOutRef.current.close().catch(() => {});
-      }
+      if (audioContextOutRef.current.state !== 'closed') audioContextOutRef.current.close().catch(() => {});
       audioContextOutRef.current = null;
     }
   };
@@ -164,9 +150,8 @@ const LiveVoiceView: React.FC<LiveVoiceViewProps> = ({ t, settings }) => {
             scriptProcessor.onaudioprocess = (e) => {
               if (!isActiveRef.current) return;
               const inputData = e.inputBuffer.getChannelData(0);
-              const l = inputData.length;
-              const int16 = new Int16Array(l);
-              for (let i = 0; i < l; i++) { int16[i] = inputData[i] * 32768; }
+              const int16 = new Int16Array(inputData.length);
+              for (let i = 0; i < inputData.length; i++) { int16[i] = inputData[i] * 32768; }
               const pcmBlob: Blob = {
                 data: encode(new Uint8Array(int16.buffer)),
                 mimeType: 'audio/pcm;rate=16000',
@@ -185,16 +170,25 @@ const LiveVoiceView: React.FC<LiveVoiceViewProps> = ({ t, settings }) => {
               setTranscription(prev => prev + message.serverContent!.outputTranscription!.text);
             }
             
-            const base64Audio = message.serverContent?.modelTurn?.parts?.find(p => p.inlineData)?.inlineData?.data;
+            const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
             if (base64Audio && outCtx.state !== 'closed') {
               nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outCtx.currentTime);
               const audioBuffer = await decodeAudioData(decode(base64Audio), outCtx, 24000, 1);
               const source = outCtx.createBufferSource();
               source.buffer = audioBuffer;
               source.connect(outCtx.destination);
+              source.onended = () => sourcesRef.current.delete(source);
               source.start(nextStartTimeRef.current);
               nextStartTimeRef.current += audioBuffer.duration;
               sourcesRef.current.add(source);
+            }
+
+            if (message.serverContent?.interrupted) {
+              for (const source of sourcesRef.current.values()) {
+                try { source.stop(); } catch(e) {}
+              }
+              sourcesRef.current.clear();
+              nextStartTimeRef.current = 0;
             }
           },
           onclose: () => stopSession(),
@@ -202,10 +196,9 @@ const LiveVoiceView: React.FC<LiveVoiceViewProps> = ({ t, settings }) => {
             const msg = e?.message || "Connection error";
             if (msg.includes("Requested entity was not found")) {
               setHasApiKey(false);
-              setErrorMessage("AI service not found. Please re-select your API key.");
               handleOpenKeySelector();
             } else {
-              setErrorMessage("AI connection failed. Check your internet.");
+              setErrorMessage("AI connection failed. Please try again.");
             }
             setStatus('error');
             stopSession(); 
@@ -214,13 +207,15 @@ const LiveVoiceView: React.FC<LiveVoiceViewProps> = ({ t, settings }) => {
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: { voiceConfig: { voiceName: settings.liveVoiceName || 'Puck' } },
-          systemInstruction: `You are a helpful and wise Islamic scholar assistant. You are conversing with a user in ${settings.language}. Be respectful, concise, and base your answers on authentic sources. Use a natural conversational tone.`,
+          systemInstruction: `You are a helpful Islamic scholar assistant. Conversing in ${settings.language}. Be concise and respectful.`,
+          outputAudioTranscription: {},
+          inputAudioTranscription: {},
         },
       });
       sessionRef.current = await sessionPromise;
     } catch (err) {
       setStatus('error');
-      setErrorMessage("Microphone access is required for this feature. Please allow access in your browser settings.");
+      setErrorMessage("Microphone access is required.");
       stopSession();
     }
   };
@@ -255,43 +250,20 @@ const LiveVoiceView: React.FC<LiveVoiceViewProps> = ({ t, settings }) => {
           </div>
         </div>
 
-        <div className="mt-8 text-center max-w-xs">
-          {status === 'error' ? (
-            <p className="text-rose-600 dark:text-rose-400 font-bold text-sm leading-relaxed">{errorMessage}</p>
-          ) : status === 'connecting' ? (
-            <p className="text-amber-600 font-black uppercase tracking-widest text-xs animate-pulse">Establishing Connection...</p>
-          ) : (
-            <p className="text-slate-600 dark:text-slate-300 font-bold italic text-sm md:text-base leading-relaxed">
-              {transcription || t.voice_instruction}
-            </p>
-          )}
+        <div className="mt-8 text-center max-w-xs h-32 overflow-y-auto scrollbar-hide">
+          <p className="text-slate-600 dark:text-slate-300 font-bold italic text-sm leading-relaxed">
+            {status === 'error' ? errorMessage : transcription || t.voice_instruction}
+          </p>
         </div>
       </div>
 
       <div className="shrink-0 flex flex-col items-center gap-4 py-6 pb-12">
         {!hasApiKey ? (
-          <button 
-            onClick={handleOpenKeySelector} 
-            className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-10 py-5 rounded-[2.5rem] font-black shadow-xl active:scale-95 transition-all flex items-center gap-3 text-sm"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-            UNLOCK AI VOICE CHAT
-          </button>
+          <button onClick={handleOpenKeySelector} className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-10 py-5 rounded-[2.5rem] font-black shadow-xl active:scale-95 transition-all text-sm uppercase tracking-widest">Unlock AI Voice</button>
         ) : isActive ? (
-          <button 
-            onClick={stopSession} 
-            className="bg-rose-600 text-white px-12 py-5 rounded-[2.5rem] font-black shadow-xl active:scale-95 transition-all uppercase tracking-widest"
-          >
-            {t.voice_btn_stop || "End Chat"}
-          </button>
+          <button onClick={stopSession} className="bg-rose-600 text-white px-12 py-5 rounded-[2.5rem] font-black shadow-xl active:scale-95 transition-all uppercase tracking-widest">{t.voice_btn_stop}</button>
         ) : (
-          <button 
-            onClick={startSession} 
-            className="bg-emerald-600 text-white px-12 py-5 rounded-[2.5rem] font-black shadow-xl active:scale-95 transition-all flex items-center gap-3 uppercase tracking-widest"
-          >
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/></svg>
-            {t.voice_btn_start || "Start Voice Chat"}
-          </button>
+          <button onClick={startSession} className="bg-emerald-600 text-white px-12 py-5 rounded-[2.5rem] font-black shadow-xl active:scale-95 transition-all uppercase tracking-widest">{t.voice_btn_start}</button>
         )}
       </div>
     </div>
