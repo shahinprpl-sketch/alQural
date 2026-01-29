@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob } from '@google/genai';
 import { AppSettings } from '../types';
@@ -206,7 +205,8 @@ const LiveVoiceView: React.FC<LiveVoiceViewProps> = ({ t, settings }) => {
         },
         config: {
           responseModalities: [Modality.AUDIO],
-          speechConfig: { voiceConfig: { voiceName: settings.liveVoiceName || 'Puck' } },
+          // Correctly nest voiceName inside prebuiltVoiceConfig
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: settings.liveVoiceName || 'Puck' } } },
           systemInstruction: `You are a helpful Islamic scholar assistant. Conversing in ${settings.language}. Be concise and respectful.`,
           outputAudioTranscription: {},
           inputAudioTranscription: {},

@@ -1,7 +1,6 @@
 
 import { Surah, Reciter, Language } from './types';
 
-// Surahs are now fetched dynamically from the API in components to ensure all 114 are available.
 export const SURAHS: Surah[] = [];
 
 const RECITERS_DATA = [
@@ -71,7 +70,7 @@ const RECITERS_DATA = [
     names: {
       en: 'Maher Al Muaiqly',
       bn: 'মাহের আল মুআইকলি',
-      hi: 'माहेर अल मुइक्ली',
+      hi: 'माहेर আল মুইક્લી',
       ar: 'ماهر المعيقلي'
     }
   },
@@ -111,7 +110,7 @@ const RECITERS_DATA = [
     names: {
       en: 'Nasser Al Qatami',
       bn: 'নাসের আল কাতামি',
-      hi: 'नासिर अल कतामी',
+      hi: 'नासिर আল कतामी',
       ar: 'ناصر القطامي'
     }
   },
@@ -131,6 +130,6 @@ export const getLocalizedReciters = (lang: Language): Reciter[] => {
   return RECITERS_DATA.map(r => ({
     id: r.id,
     identifier: r.identifier,
-    name: r.names[lang] || r.names.en
+    name: (r.names as any)[lang] || r.names.en
   }));
 };

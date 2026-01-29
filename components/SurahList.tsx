@@ -37,7 +37,7 @@ const SurahList: React.FC<SurahListProps> = ({ onSurahClick, settings, t }) => {
   const handlePlaySequence = async (e: React.MouseEvent, surah: Surah) => {
     e.stopPropagation();
 
-    // If already playing this surah, stop it
+    // Toggle off if clicking the currently playing surah
     if (activeSurahPlaying === surah.number) {
       audioRef.current?.pause();
       setActiveSurahPlaying(null);
@@ -45,18 +45,24 @@ const SurahList: React.FC<SurahListProps> = ({ onSurahClick, settings, t }) => {
       return;
     }
 
-    // Stop existing audio if any
-    audioRef.current?.pause();
+    // Stop and reset existing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     
     setActiveSurahPlaying(surah.number);
     setPlayState('naming');
 
     // 1. Speak Surah Name (AI TTS)
-    await speakSurahName(surah.englishName, surah.name, settings.liveVoiceName);
+    try {
+      await speakSurahName(surah.englishName, surah.name, settings.liveVoiceName);
+    } catch (err) {
+      console.warn("AI Naming failed, skipping to recitation");
+    }
 
-    // Check if user cancelled while AI was speaking
+    // Check if user still wants this surah after AI finishes naming
     if (activeSurahPlaying === surah.number || activeSurahPlaying === null) {
-       // Proceed to Step 2
        setPlayState('reciting');
        const recitationUrl = `https://cdn.islamic.network/quran/audio-surah/128/${settings.reciter}/${surah.number}.mp3`;
        
@@ -90,6 +96,7 @@ const SurahList: React.FC<SurahListProps> = ({ onSurahClick, settings, t }) => {
     <div className="p-5 md:p-8 space-y-6 pb-32">
       <audio 
         ref={audioRef} 
+        crossOrigin="anonymous"
         onEnded={() => {
           setActiveSurahPlaying(null);
           setPlayState('idle');
@@ -116,12 +123,10 @@ const SurahList: React.FC<SurahListProps> = ({ onSurahClick, settings, t }) => {
               onClick={() => onSurahClick(surah)}
               className={`group bg-white dark:bg-slate-800 rounded-[2rem] border flex items-stretch hover:shadow-xl transition-all text-left overflow-hidden shadow-sm ${isCurrent ? 'border-emerald-500 shadow-emerald-100 ring-2 ring-emerald-500/10' : 'border-slate-50 dark:border-slate-800'}`}
             >
-              {/* Left Number Column */}
               <div className={`w-16 md:w-20 flex items-center justify-center border-r transition-colors ${isCurrent ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-slate-50/50 dark:bg-slate-900/30 dark:border-slate-800 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900/20'}`}>
                 <span className="font-black text-sm">{surah.number}</span>
               </div>
 
-              {/* Middle Info Section */}
               <div className="flex-1 p-6 md:p-8 flex items-center justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
@@ -155,7 +160,6 @@ const SurahList: React.FC<SurahListProps> = ({ onSurahClick, settings, t }) => {
                   </p>
                 </div>
 
-                {/* Right Arabic Name */}
                 <div className="text-right">
                   <span className={`arabic-text text-3xl md:text-4xl transition-all ${isCurrent ? 'text-emerald-600 dark:text-emerald-400 scale-110 block' : 'text-slate-800 dark:text-slate-100 opacity-80 group-hover:opacity-100'}`}>
                     {surah.name}
@@ -167,7 +171,6 @@ const SurahList: React.FC<SurahListProps> = ({ onSurahClick, settings, t }) => {
         })}
       </div>
       
-      {/* Scroll padding for nav */}
       <div className="h-10"></div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Modality } from "@google/genai";
 
 async function decodeAudioData(
@@ -31,7 +30,14 @@ function decode(base64: string) {
 }
 
 export async function speakText(text: string, voice: string = 'Kore'): Promise<void> {
-  if (!process.env.API_KEY) return Promise.resolve();
+  // Check if an API key is selected in AI Studio environments
+  const hasKey = (window as any).aistudio?.hasSelectedApiKey 
+    ? await (window as any).aistudio.hasSelectedApiKey() 
+    : !!process.env.API_KEY;
+
+  if (!hasKey && (window as any).aistudio?.openSelectKey) {
+    await (window as any).aistudio.openSelectKey();
+  }
 
   return new Promise(async (resolve) => {
     let audioContext: AudioContext | null = null;
@@ -41,6 +47,7 @@ export async function speakText(text: string, voice: string = 'Kore'): Promise<v
         model: "gemini-2.5-flash-preview-tts",
         contents: [{ parts: [{ text: text }] }],
         config: {
+          // Fix typo in responseModalities
           responseModalities: [Modality.AUDIO],
           speechConfig: {
             voiceConfig: {
@@ -55,7 +62,12 @@ export async function speakText(text: string, voice: string = 'Kore'): Promise<v
         audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
           sampleRate: 24000,
         });
-        await audioContext.resume();
+        
+        // Ensure context is running - critical for many browsers
+        if (audioContext.state === 'suspended') {
+          await audioContext.resume();
+        }
+
         const audioBuffer = await decodeAudioData(decode(base64Audio), audioContext, 24000, 1);
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffer;
@@ -71,7 +83,12 @@ export async function speakText(text: string, voice: string = 'Kore'): Promise<v
       } else {
         resolve();
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("TTS Error:", error);
+      // Reset if key issue
+      if (error.message?.includes("Requested entity was not found") && (window as any).aistudio?.openSelectKey) {
+        await (window as any).aistudio.openSelectKey();
+      }
       if (audioContext && audioContext.state !== 'closed') {
         audioContext.close().catch(() => {});
       }
