@@ -180,6 +180,8 @@
 </head>
 <body>
     <div id="root"></div>
+    <!-- Explicitly load index.tsx as a module for Vercel and standard browsers -->
+    <script type="module" src="./index.tsx"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

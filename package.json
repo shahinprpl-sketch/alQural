@@ -13,7 +13,7 @@
   },
   "scripts": {
     "start": "npx serve -s .",
-    "build": "mkdir -p dist && cp -r . dist/ 2>/dev/null || true",
+    "build": "mkdir -p public && cp index.html index.tsx types.ts constants.ts App.tsx translations.ts metadata.json manifest.json sw.js robots.txt public/ && cp -r components services icons public/ 2>/dev/null || true",
     "dev": "npx serve -s ."
   },
   "keywords": [
