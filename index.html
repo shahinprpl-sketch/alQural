@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Al-Quran Bangla</title>
     
-    <!-- Global Error Handler to debug "Blank Screen" -->
+    <!-- Global Error Handler -->
     <script>
       window.onerror = function(msg, url, line, col, error) {
-        console.error("Global Error:", msg, error);
+        console.error("Critical Error:", msg, error);
         const root = document.getElementById('root');
-        if (root && root.innerHTML === "") {
-          root.innerHTML = `<div style="padding: 20px; color: red; font-family: sans-serif;">
-            <h3>Application Error</h3>
-            <p>${msg}</p>
-            <small>${url}:${line}</small>
-            <button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 8px;">Retry</button>
+        if (root && root.innerHTML.trim() === "") {
+          root.innerHTML = `<div style="padding: 40px; text-align: center; font-family: sans-serif; color: #1e293b;">
+            <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+            <h3 style="font-weight: 900; margin-bottom: 10px;">ব্যর্থতা (Startup Error)</h3>
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">${msg}</p>
+            <button onclick="location.reload()" style="padding: 12px 24px; background: #10b981; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">Retry Loading</button>
           </div>`;
         }
       };
@@ -79,8 +79,6 @@
         .arabic-text { font-family: 'Amiri', serif; direction: rtl; }
         ::-webkit-scrollbar { display: none; }
         input, button { touch-action: manipulation; }
-        .page-enter { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -101,22 +99,14 @@
 <body>
     <div id="root"></div>
     
+    <!-- Simplified loading to avoid CORS/ESM resolution bugs in Babel standalone -->
     <script type="text/babel" data-type="module" data-presets="typescript,react" src="./index.tsx"></script>
 
     <script>
-        if ('serviceWorker' in navigator) {
+        // Only register service worker if not in development or if explicitly allowed
+        if ('serviceWorker' in navigator && window.location.hostname !== 'localhost') {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').then(reg => {
-                  reg.onupdatefound = () => {
-                    const installingWorker = reg.installing;
-                    installingWorker.onstatechange = () => {
-                      if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        // Notify user of update
-                        console.log('New content is available; please refresh.');
-                      }
-                    };
-                  };
-                }).catch(err => console.log('SW registration failed:', err));
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed:', err));
             });
         }
     </script>
