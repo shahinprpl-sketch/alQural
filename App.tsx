@@ -1,19 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
-import { ViewMode, Surah, AppSettings } from './types';
-import { translations } from './translations';
-import SurahList from './components/SurahList';
-import AyahView from './components/AyahView';
-import SearchView from './components/SearchView';
-import SettingsView from './components/SettingsView';
-import FavoritesView from './components/FavoritesView';
-import AudioBookView from './components/AudioBookView';
-import DeveloperView from './components/DeveloperView';
-import PrayerTimeView from './components/PrayerTimeView';
-import HadithView from './components/HadithView';
-import LiveVoiceView from './components/LiveVoiceView';
-import RamadanSpecialView from './components/RamadanSpecialView';
-import Navigation from './components/Navigation';
+import { ViewMode, Surah, AppSettings } from './types.ts';
+import { translations } from './translations.ts';
+// Fix: Use named imports for SurahList and AyahView components as they are defined as named exports in their modules
+import { SurahList } from './components/SurahList.tsx';
+import { AyahView } from './components/AyahView.tsx';
+import SearchView from './components/SearchView.tsx';
+import SettingsView from './components/SettingsView.tsx';
+import FavoritesView from './components/FavoritesView.tsx';
+import AudioBookView from './components/AudioBookView.tsx';
+import DeveloperView from './components/DeveloperView.tsx';
+import PrayerTimeView from './components/PrayerTimeView.tsx';
+import HadithView from './components/HadithView.tsx';
+import LiveVoiceView from './components/LiveVoiceView.tsx';
+import RamadanSpecialView from './components/RamadanSpecialView.tsx';
+import Navigation from './components/Navigation.tsx';
 
 type NudgeType = 'welcome' | 'wisdom' | 'ai' | 'audio' | 'fonts' | 'donate';
 
@@ -44,13 +45,11 @@ const App: React.FC = () => {
 
   const t = translations[settings.language];
 
-  // Splash Screen Logic
   useEffect(() => {
     const timer = setTimeout(() => setIsAppLoading(false), 2400);
     return () => clearTimeout(timer);
   }, []);
 
-  // Theme Application Logic
   useEffect(() => {
     const root = window.document.documentElement;
     if (settings.isDarkMode) {
@@ -63,7 +62,6 @@ const App: React.FC = () => {
     localStorage.setItem('quran_settings', JSON.stringify(settings));
   }, [settings.isDarkMode, settings]);
 
-  // Online/Offline Detection
   useEffect(() => {
     const handleStatus = () => setIsOnline(navigator.onLine);
     window.addEventListener('online', handleStatus);
@@ -74,7 +72,6 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // Listener for dynamic setting updates
   useEffect(() => {
     const handleSettingUpdate = (e: any) => {
       const { key, value } = e.detail;
@@ -84,7 +81,6 @@ const App: React.FC = () => {
     return () => window.removeEventListener('update_setting', handleSettingUpdate);
   }, []);
 
-  // Smart Nudge Logic
   useEffect(() => {
     if (isAppLoading) return;
     const nudgeSequence: { type: NudgeType, delay: number }[] = [
