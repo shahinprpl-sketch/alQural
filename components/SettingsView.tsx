@@ -16,18 +16,17 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, onNa
   const [downloadProgress, setDownloadProgress] = useState<{current: number, total: number} | null>(null);
   const [isFullyCached, setIsFullyCached] = useState(false);
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
+  const [showLegalModal, setShowLegalModal] = useState<'privacy' | 'terms' | null>(null);
   const hasSpokenPrompt = useRef(false);
 
   useEffect(() => {
     const count = Object.keys(localStorage).filter(key => key.startsWith('tafsir_') || key.startsWith('ayah_')).length;
     setCacheCount(count);
     
-    // Check if the surah list is already cached in Cache API
     if ('caches' in window) {
       caches.open('al-quran-v2.1-offline').then(cache => {
         cache.match('https://api.alquran.cloud/v1/surah').then(res => {
           if (res) {
-            // Check if a sample surah is also cached
             cache.match(`https://api.alquran.cloud/v1/surah/1/editions/quran-simple,bn.bengali`).then(sRes => {
               if (sRes) setIsFullyCached(true);
             });
@@ -36,7 +35,6 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, onNa
       });
     }
 
-    // Auto-play voice prompt if not already fully cached
     if (!isFullyCached && !hasSpokenPrompt.current) {
       const triggerPrompt = async () => {
         setIsAiSpeaking(true);
@@ -47,7 +45,6 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, onNa
         hasSpokenPrompt.current = true;
       };
       
-      // Delay slightly for smooth page transition
       const timer = setTimeout(triggerPrompt, 1200);
       return () => clearTimeout(timer);
     }
@@ -76,15 +73,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, onNa
     }
     
     setDownloadProgress({ current: 0, total: 114 });
-    
     const editionMap = { bn: 'bn.bengali', hi: 'hi.hindi', en: 'en.ahmedali', ar: 'ar.jalalayn' };
     const edition = editionMap[settings.language] || 'en.ahmedali';
 
     try {
-      // 1. Cache the Surah list
       await fetch('https://api.alquran.cloud/v1/surah');
-      
-      // 2. Loop through all 114 Surahs and fetch them
       for (let i = 1; i <= 114; i++) {
         try {
           await fetch(`https://api.alquran.cloud/v1/surah/${i}/editions/quran-simple,${edition}`);
@@ -92,10 +85,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, onNa
           console.warn(`Failed to fetch Surah ${i}, skipping...`);
         }
         setDownloadProgress({ current: i, total: 114 });
-        // Small yield to UI thread to prevent blocking
         if (i % 5 === 0) await new Promise(r => setTimeout(r, 100));
       }
-      
       setIsFullyCached(true);
       setDownloadProgress(null);
     } catch (e) {
@@ -113,7 +104,6 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, onNa
         <h2 className="text-3xl font-black text-slate-900 dark:text-white leading-tight">{t.settings_title}</h2>
       </div>
 
-      {/* Offline Management Section */}
       <section className="space-y-4">
         <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] px-1">{t.settings_offline_title}</h3>
         <div className={`p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border shadow-sm space-y-6 transition-all duration-500 ${isAiSpeaking ? 'border-emerald-500 ring-4 ring-emerald-500/10' : 'border-slate-100 dark:border-slate-800'}`}>
@@ -200,38 +190,33 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, onNa
         </div>
       </section>
 
-      {/* Assistant Voice Selection Section */}
       <section className="space-y-4">
-        <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] px-1">Assistant Voice</h3>
-        <div className="p-6 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
-          <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">{t.settings_voice_label}</label>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => updateSetting('liveVoiceName', 'Puck')}
-              className={`flex flex-col items-center py-6 rounded-[2rem] border transition-all ${
-                settings.liveVoiceName === 'Puck'
-                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-xl shadow-emerald-900/20'
-                  : 'bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 border-slate-100 dark:border-slate-800'
-              }`}
-            >
-              <svg className="w-8 h-8 mb-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-              <span className="text-[11px] font-black uppercase tracking-widest">{t.settings_voice_male || 'Male'}</span>
-            </button>
-            <button
-              onClick={() => updateSetting('liveVoiceName', 'Kore')}
-              className={`flex flex-col items-center py-6 rounded-[2rem] border transition-all ${
-                settings.liveVoiceName === 'Kore'
-                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-xl shadow-emerald-900/20'
-                  : 'bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 border-slate-100 dark:border-slate-800'
-              }`}
-            >
-              <svg className="w-8 h-8 mb-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-              <span className="text-[11px] font-black uppercase tracking-widest">{t.settings_voice_female || 'Female'}</span>
-            </button>
-          </div>
+        <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] px-1">{t.settings_legal}</h3>
+        <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+          <button 
+            onClick={() => setShowLegalModal('privacy')}
+            className="w-full p-6 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all border-b border-slate-100 dark:border-slate-800"
+          >
+            <div className="flex items-center gap-4">
+              <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+              <span className="text-base font-black text-slate-800 dark:text-slate-100">{t.settings_privacy}</span>
+            </div>
+            <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7"></path></svg>
+          </button>
+          <button 
+            onClick={() => setShowLegalModal('terms')}
+            className="w-full p-6 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all"
+          >
+            <div className="flex items-center gap-4">
+              <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+              <span className="text-base font-black text-slate-800 dark:text-slate-100">{t.settings_terms}</span>
+            </div>
+            <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7"></path></svg>
+          </button>
         </div>
       </section>
 
+      {/* Existing Settings Sections Below... */}
       <section className="space-y-4">
         <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] px-1">{t.settings_font_size}</h3>
         <div className="space-y-10 p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
@@ -297,6 +282,51 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, onNa
       <div className="text-center py-10 opacity-30">
         <p className="text-[10px] text-slate-900 dark:text-white uppercase font-black tracking-[0.5em]">{t.settings_version}</p>
       </div>
+
+      {/* Legal Modal */}
+      {showLegalModal && (
+        <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={() => setShowLegalModal(null)}></div>
+          <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[3rem] sm:rounded-[3rem] shadow-2xl relative z-10 animate-in slide-in-from-bottom-10 duration-500 flex flex-col max-h-[90vh]">
+            <div className="p-8 pb-4 shrink-0 flex justify-between items-center border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                {showLegalModal === 'privacy' ? t.settings_privacy : t.settings_terms}
+              </h3>
+              <button onClick={() => setShowLegalModal(null)} className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-full text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+            <div className="p-8 overflow-y-auto space-y-6 text-sm md:text-base text-slate-600 dark:text-slate-400 leading-relaxed scrollbar-hide">
+              {showLegalModal === 'privacy' ? (
+                <>
+                  <p><strong>Privacy Policy for Al-Quran AI</strong></p>
+                  <p>At Al-Quran AI, we respect your privacy. This application is designed to be highly private by default.</p>
+                  <ul className="list-disc pl-5 space-y-2">
+                    <li><strong>Data Storage:</strong> All your favorites, settings, and progress are stored locally on your device using Browser Storage. We do not host your personal reading data on our servers.</li>
+                    <li><strong>AI Features:</strong> When you use AI Search or Tafsir, your query is processed by Google Gemini. No personally identifiable information (PII) is sent with these requests.</li>
+                    <li><strong>Location:</strong> Prayer times require location access. This data is used only to fetch timings from Aladhan API and is not stored or shared.</li>
+                    <li><strong>Microphone:</strong> Voice chat uses the microphone strictly while active. Audio streams are processed in real-time and not recorded.</li>
+                  </ul>
+                </>
+              ) : (
+                <>
+                  <p><strong>Terms of Service</strong></p>
+                  <p>By using Al-Quran AI, you agree to the following:</p>
+                  <ul className="list-disc pl-5 space-y-2">
+                    <li><strong>Usage:</strong> This app is for educational and spiritual purposes. We strive for accuracy but recommend consulting qualified scholars for definitive Islamic rulings.</li>
+                    <li><strong>AI Content:</strong> AI-generated Tafsir and responses are provided for guidance and should be verified against authentic classical sources.</li>
+                    <li><strong>Donations:</strong> Contributions are voluntary Sadaqah Jariyah and are used to keep the platform ad-free and maintained.</li>
+                    <li><strong>Modifications:</strong> We reserve the right to update features to improve the user experience.</li>
+                  </ul>
+                </>
+              )}
+            </div>
+            <div className="p-8 pt-4 bg-slate-50 dark:bg-slate-950/50 shrink-0">
+              <button onClick={() => setShowLegalModal(null)} className="w-full py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] active:scale-95 transition-all shadow-xl">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

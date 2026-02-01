@@ -6,10 +6,19 @@
   "start_url": "./index.html",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#020617",
   "theme_color": "#059669",
+  "orientation": "portrait",
   "categories": ["education", "books", "lifestyle"],
+  "screenshots": [
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Al-Quran Home Screen"
+    }
+  ],
   "shortcuts": [
     {
       "name": "Surah List",
