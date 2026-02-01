@@ -30,7 +30,6 @@ export interface Reciter {
 export type Language = 'bn' | 'en' | 'hi' | 'ar';
 
 export interface AppSettings {
-  userName: string;
   arabicFontSize: number;
   banglaFontSize: number;
   isDarkMode: boolean;

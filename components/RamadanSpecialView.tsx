@@ -172,11 +172,7 @@ const RamadanSpecialView: React.FC<RamadanSpecialViewProps> = ({ settings, t, se
     ctx.fillText("100%", 540, 430);
     ctx.font = "bold 35px 'Hind Siliguri', sans-serif";
     ctx.fillText(`${t.ramadan_day_label} ${ramadanDay} ${t.ramadan_level}`, 540, 480);
-    if (settings.userName) {
-      ctx.fillStyle = "#fbbf24"; 
-      ctx.font = "black 50px 'Hind Siliguri', sans-serif";
-      ctx.fillText(settings.userName.toUpperCase(), 540, 560);
-    }
+    
     ctx.fillStyle = "#ffffff"; 
     ctx.font = "bold 55px 'Hind Siliguri', sans-serif";
     ctx.fillText(currentRank, 540, 680);
@@ -294,7 +290,7 @@ const RamadanSpecialView: React.FC<RamadanSpecialViewProps> = ({ settings, t, se
         )}
         <span className="text-4xl animate-bounce inline-block">🌙</span>
         <h2 className="text-3xl font-black text-slate-900 dark:text-white leading-tight uppercase tracking-tight">
-          {settings.userName ? `${settings.userName}'s Ramadan` : 'Ramadan Kareem'}
+          Ramadan Kareem
         </h2>
         <p className="text-[10px] text-emerald-600 font-black uppercase tracking-[0.4em]">{t.app_subtitle}</p>
       </div>
@@ -329,7 +325,7 @@ const RamadanSpecialView: React.FC<RamadanSpecialViewProps> = ({ settings, t, se
              <div className="relative z-10 space-y-4">
                <span className="text-5xl mb-2 block animate-bounce">🏆</span>
                <h5 className="font-black text-2xl uppercase tracking-tighter">
-                 {settings.language === 'bn' ? `${settings.userName || ''} মাশাআল্লাহ!` : `SubhanAllah ${settings.userName || ''}!`}
+                 {settings.language === 'bn' ? 'মাশাআল্লাহ!' : 'SubhanAllah!'}
                </h5>
                <p className="text-sm text-emerald-50 leading-relaxed font-bold">
                  {settings.language === 'bn' 
@@ -399,13 +395,13 @@ const RamadanSpecialView: React.FC<RamadanSpecialViewProps> = ({ settings, t, se
               <div className="flex justify-between items-center">
                 <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">{settings.language === 'bn' ? 'সেহরির দোয়া' : 'Dua for Sehri'}</p>
                 <button 
-                  onClick={() => handleRecite("نَوَيْتُ اَنْ اَصُوْمَ غَدًا مِّنْ شَهْرِ রَمْضَانَ الْمُبَارَكِ فَرْضًا لَّكَ يَا اَللهُ فَتَقَبَّলْ مِنِّى اِنَّكَ اَنْتَ السَّমِيْعُ الْعَلِيْمُ", 'sehri')}
+                  onClick={() => handleRecite("نَوَيْتُ اَنْ اَصُوْمَ غَدًا مِّনْ شَهْرِ রَمْضَانَ الْمُبَارَكِ فَرْضًا لَّكَ يَا اَللهُ فَتَقَبَّলْ مِنِّى اِنَّكَ اَنْتَ السَّমِيْعُ الْعَلِيْمُ", 'sehri')}
                   className={`p-2 rounded-xl transition-all ${isSpeaking === 'sehri' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:text-emerald-600'}`}
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
                 </button>
               </div>
-              <p className="arabic-text text-xl text-right leading-loose text-slate-900 dark:text-white">نَوَيْتُ اَنْ اَصُوْمَ غَدًا مِّنْ شَهْرِ রَمْضَانَ الْمُبَارَكِ فَرْضًا لَّكَ يَا اَللهُ فَتَقَبَّলْ مِنِّى اِنَّكَ اَنْتَ السَّমِيْعُ الْعَلِيْمُ</p>
+              <p className="arabic-text text-xl text-right leading-loose text-slate-900 dark:text-white">نَوَيْتُ اَنْ اَصُوْمَ غَدًا مِّনْ شَهْرِ রَمْضَانَ الْمُبَارَكِ فَرْضًا لَّكَ يَا اَللهُ فَتَقَبَّলْ مِنِّى اِنَّكَ اَنْتَ السَّমِيْعُ الْعَلِيْمُ</p>
             </div>
           </div>
         </div>

@@ -32,7 +32,6 @@ const App: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings>(() => {
     const saved = localStorage.getItem('quran_settings');
     return saved ? JSON.parse(saved) : {
-      userName: '',
       arabicFontSize: 32,
       banglaFontSize: 18,
       isDarkMode: false,
@@ -138,7 +137,7 @@ const App: React.FC = () => {
 
   const nudgeData = (() => {
     switch (activeNudge) {
-      case 'welcome': return { title: t.welcome_greeting, desc: settings.userName ? `${t.welcome_back_msg}, ${settings.userName}` : t.welcome_back_msg, icon: '🕌' };
+      case 'welcome': return { title: t.welcome_greeting, desc: t.welcome_back_msg, icon: '🕌' };
       case 'wisdom': return { title: t.nudge_wisdom_title, desc: t.nudge_wisdom_desc, icon: '📖' };
       case 'ai': return { title: t.nudge_ai_title, desc: t.nudge_ai_desc, icon: '🎙️' };
       case 'audio': return { title: "Listen to Quran", desc: "Soulful recitations are waiting for you.", icon: '🎧' };
@@ -215,8 +214,8 @@ const App: React.FC = () => {
               <button onClick={() => setViewMode('favorites')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'favorites' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600' : 'text-slate-400'}`}>
                 <svg className="w-5 h-5" fill={viewMode === 'favorites' ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
               </button>
-              <button onClick={() => setViewMode('settings')} className="w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-800 flex items-center justify-center font-black text-[10px] text-slate-800 dark:text-white bg-white dark:bg-slate-800 uppercase overflow-hidden">
-                {settings.userName ? settings.userName.substring(0, 2) : 'MS'}
+              <button onClick={() => setViewMode('settings')} className="w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-800 dark:text-white bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
               </button>
             </div>
           </div>
