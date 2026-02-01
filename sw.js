@@ -1,4 +1,4 @@
-const CACHE_NAME = 'al-quran-v2.5';
+const CACHE_NAME = 'al-quran-v2.6';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -14,7 +14,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network-first policy to prevent stale/broken code from being served by the cache
+  // Always prefer network for now to ensure the fix propogates correctly
   event.respondWith(
     fetch(event.request).catch(() => caches.match(event.request))
   );

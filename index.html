@@ -99,8 +99,8 @@
 <body>
     <div id="root"></div>
     
-    <!-- Babel standalone for handling .tsx files in the browser -->
-    <script type="text/babel" data-presets="react,typescript" src="./index.tsx"></script>
+    <!-- data-type="module" is required for Babel Standalone to work with importmaps -->
+    <script type="text/babel" data-type="module" data-presets="react,typescript" src="./index.tsx"></script>
 
     <script>
         if ('serviceWorker' in navigator && window.location.hostname !== 'localhost') {
