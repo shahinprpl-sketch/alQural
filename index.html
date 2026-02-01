@@ -11,11 +11,11 @@
         console.error("Critical Error:", msg, error);
         const root = document.getElementById('root');
         if (root && root.innerHTML.trim() === "") {
-          root.innerHTML = `<div style="padding: 40px; text-align: center; font-family: sans-serif; color: #1e293b;">
-            <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
-            <h3 style="font-weight: 900; margin-bottom: 10px;">ব্যর্থতা (Startup Error)</h3>
-            <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">${msg}</p>
-            <button onclick="location.reload()" style="padding: 12px 24px; background: #10b981; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">Retry Loading</button>
+          root.innerHTML = `<div style="padding: 40px; text-align: center; font-family: sans-serif; color: #1e293b; background: white; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <div style="font-size: 64px; margin-bottom: 24px;">⚠️</div>
+            <h3 style="font-weight: 900; margin-bottom: 12px; font-size: 24px;">ব্যর্থতা (Startup Error)</h3>
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 24px; max-width: 300px;">${msg}<br/><small>Line: ${line}</small></p>
+            <button onclick="location.reload()" style="padding: 14px 28px; background: #10b981; color: white; border: none; border-radius: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);">Retry Loading</button>
           </div>`;
         }
       };
@@ -99,11 +99,10 @@
 <body>
     <div id="root"></div>
     
-    <!-- Simplified loading to avoid CORS/ESM resolution bugs in Babel standalone -->
-    <script type="text/babel" data-type="module" data-presets="typescript,react" src="./index.tsx"></script>
+    <!-- Babel standalone for handling .tsx files in the browser -->
+    <script type="text/babel" data-presets="react,typescript" src="./index.tsx"></script>
 
     <script>
-        // Only register service worker if not in development or if explicitly allowed
         if ('serviceWorker' in navigator && window.location.hostname !== 'localhost') {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed:', err));

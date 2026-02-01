@@ -1,4 +1,3 @@
-
 {
   "name": "al-quran-bangla-ai",
   "version": "1.2.0",
@@ -13,7 +12,7 @@
   },
   "scripts": {
     "start": "npx serve -s .",
-    "build": "mkdir -p public && cp -rf index.html index.tsx types.ts constants.ts App.tsx translations.ts metadata.json manifest.json sw.js robots.txt components services public/ && (test -d icons && cp -rf icons public/ || true)",
+    "build": "rm -rf public && mkdir -p public && cp -rf index.html index.tsx types.ts constants.ts App.tsx translations.ts metadata.json manifest.json sw.js robots.txt components services public/ && (test -d icons && cp -rf icons public/ || true)",
     "dev": "npx serve -s ."
   }
 }
