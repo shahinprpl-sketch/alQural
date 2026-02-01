@@ -12,6 +12,7 @@ import DeveloperView from './components/DeveloperView';
 import PrayerTimeView from './components/PrayerTimeView';
 import HadithView from './components/HadithView';
 import LiveVoiceView from './components/LiveVoiceView';
+import RamadanSpecialView from './components/RamadanSpecialView';
 import Navigation from './components/Navigation';
 
 type NudgeType = 'welcome' | 'wisdom' | 'ai' | 'audio' | 'fonts' | 'donate';
@@ -31,6 +32,7 @@ const App: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings>(() => {
     const saved = localStorage.getItem('quran_settings');
     return saved ? JSON.parse(saved) : {
+      userName: '',
       arabicFontSize: 32,
       banglaFontSize: 18,
       isDarkMode: false,
@@ -136,7 +138,7 @@ const App: React.FC = () => {
 
   const nudgeData = (() => {
     switch (activeNudge) {
-      case 'welcome': return { title: t.welcome_greeting, desc: t.welcome_back_msg, icon: '🕌' };
+      case 'welcome': return { title: t.welcome_greeting, desc: settings.userName ? `${t.welcome_back_msg}, ${settings.userName}` : t.welcome_back_msg, icon: '🕌' };
       case 'wisdom': return { title: t.nudge_wisdom_title, desc: t.nudge_wisdom_desc, icon: '📖' };
       case 'ai': return { title: t.nudge_ai_title, desc: t.nudge_ai_desc, icon: '🎙️' };
       case 'audio': return { title: "Listen to Quran", desc: "Soulful recitations are waiting for you.", icon: '🎧' };
@@ -197,7 +199,6 @@ const App: React.FC = () => {
         <div className="max-w-5xl mx-auto w-full px-5 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
-              {/* Changed onClick to navigate to 'developer' view instead of 'surahList' */}
               <div className="bg-emerald-600 dark:bg-emerald-500 p-2.5 rounded-xl cursor-pointer active:scale-95 transition-all shadow-lg hover:shadow-emerald-500/30" onClick={() => setViewMode('developer')}>
                 <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
               </div>
@@ -214,7 +215,9 @@ const App: React.FC = () => {
               <button onClick={() => setViewMode('favorites')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'favorites' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600' : 'text-slate-400'}`}>
                 <svg className="w-5 h-5" fill={viewMode === 'favorites' ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
               </button>
-              <button onClick={() => setViewMode('developer')} className="w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-800 flex items-center justify-center font-black text-[10px] text-slate-800 dark:text-white bg-white dark:bg-slate-800">MS</button>
+              <button onClick={() => setViewMode('settings')} className="w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-800 flex items-center justify-center font-black text-[10px] text-slate-800 dark:text-white bg-white dark:bg-slate-800 uppercase overflow-hidden">
+                {settings.userName ? settings.userName.substring(0, 2) : 'MS'}
+              </button>
             </div>
           </div>
         </div>
@@ -224,9 +227,10 @@ const App: React.FC = () => {
         <div className="page-enter h-full max-w-5xl mx-auto w-full">
           {(() => {
             switch (viewMode) {
-              case 'surahList': return <SurahList settings={settings} onSurahClick={(s) => { setSelectedSurah(s); setViewMode('ayahView'); }} t={t} />;
+              case 'surahList': return <SurahList settings={settings} onSurahClick={(s) => { setSelectedSurah(s); setViewMode('ayahView'); }} t={t} favorites={favorites} onToggleFavorite={toggleFavorite} />;
               case 'audioBook': return <AudioBookView settings={settings} t={t} />;
               case 'prayerTimes': return <PrayerTimeView t={t} />;
+              case 'ramadanSpecial': return <RamadanSpecialView settings={settings} t={t} setViewMode={setViewMode} />;
               case 'liveVoice': return <LiveVoiceView t={t} settings={settings} />;
               case 'hadith': return <HadithView t={t} language={settings.language} />;
               case 'ayahView': return selectedSurah && <AyahView surah={selectedSurah} settings={settings} favorites={favorites} onToggleFavorite={toggleFavorite} onBack={() => setViewMode('surahList')} t={t} />;
@@ -234,7 +238,7 @@ const App: React.FC = () => {
               case 'favorites': return <FavoritesView settings={settings} favorites={favorites} onToggleFavorite={toggleFavorite} t={t} />;
               case 'settings': return <SettingsView settings={settings} setSettings={setSettings} onNavigateToDeveloper={() => setViewMode('developer')} t={t} />;
               case 'developer': return <DeveloperView onBack={() => setViewMode('settings')} t={t} />;
-              default: return <SurahList settings={settings} onSurahClick={(s) => { setSelectedSurah(s); setViewMode('ayahView'); }} t={t} />;
+              default: return <SurahList settings={settings} onSurahClick={(s) => { setSelectedSurah(s); setViewMode('ayahView'); }} t={t} favorites={favorites} onToggleFavorite={toggleFavorite} />;
             }
           })()}
         </div>

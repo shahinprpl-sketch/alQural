@@ -1,7 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AppSettings, ViewMode, Language } from '../types';
 import { getLocalizedReciters } from '../constants';
+import { speakText } from '../services/tts';
 
 interface SettingsViewProps {
   settings: AppSettings;
@@ -12,11 +13,45 @@ interface SettingsViewProps {
 
 const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, onNavigateToDeveloper, t }) => {
   const [cacheCount, setCacheCount] = useState(0);
+  const [downloadProgress, setDownloadProgress] = useState<{current: number, total: number} | null>(null);
+  const [isFullyCached, setIsFullyCached] = useState(false);
+  const [isAiSpeaking, setIsAiSpeaking] = useState(false);
+  const hasSpokenPrompt = useRef(false);
 
   useEffect(() => {
     const count = Object.keys(localStorage).filter(key => key.startsWith('tafsir_') || key.startsWith('ayah_')).length;
     setCacheCount(count);
-  }, []);
+    
+    // Check if the surah list is already cached in Cache API
+    if ('caches' in window) {
+      caches.open('al-quran-v2.1-offline').then(cache => {
+        cache.match('https://api.alquran.cloud/v1/surah').then(res => {
+          if (res) {
+            // Check if a sample surah is also cached
+            cache.match(`https://api.alquran.cloud/v1/surah/1/editions/quran-simple,bn.bengali`).then(sRes => {
+              if (sRes) setIsFullyCached(true);
+            });
+          }
+        });
+      });
+    }
+
+    // Auto-play voice prompt if not already fully cached
+    if (!isFullyCached && !hasSpokenPrompt.current) {
+      const triggerPrompt = async () => {
+        setIsAiSpeaking(true);
+        try {
+          await speakText(t.offline_voice_prompt, settings.liveVoiceName || 'Kore');
+        } catch (e) {}
+        setIsAiSpeaking(false);
+        hasSpokenPrompt.current = true;
+      };
+      
+      // Delay slightly for smooth page transition
+      const timer = setTimeout(triggerPrompt, 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [isFullyCached, t.offline_voice_prompt, settings.liveVoiceName]);
 
   const updateSetting = (key: keyof AppSettings, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
@@ -26,16 +61,126 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, onNa
     const keys = Object.keys(localStorage).filter(key => key.startsWith('tafsir_') || key.startsWith('ayah_'));
     keys.forEach(key => localStorage.removeItem(key));
     setCacheCount(0);
+    if ('caches' in window) {
+      caches.delete('al-quran-v2.1-offline');
+      setIsFullyCached(false);
+    }
     alert('Cache cleared.');
+  };
+
+  const handleDownloadAll = async () => {
+    if (downloadProgress) return;
+    if (!navigator.onLine) {
+      alert("Please connect to the internet to download for offline use.");
+      return;
+    }
+    
+    setDownloadProgress({ current: 0, total: 114 });
+    
+    const editionMap = { bn: 'bn.bengali', hi: 'hi.hindi', en: 'en.ahmedali', ar: 'ar.jalalayn' };
+    const edition = editionMap[settings.language] || 'en.ahmedali';
+
+    try {
+      // 1. Cache the Surah list
+      await fetch('https://api.alquran.cloud/v1/surah');
+      
+      // 2. Loop through all 114 Surahs and fetch them
+      for (let i = 1; i <= 114; i++) {
+        try {
+          await fetch(`https://api.alquran.cloud/v1/surah/${i}/editions/quran-simple,${edition}`);
+        } catch (e) {
+          console.warn(`Failed to fetch Surah ${i}, skipping...`);
+        }
+        setDownloadProgress({ current: i, total: 114 });
+        // Small yield to UI thread to prevent blocking
+        if (i % 5 === 0) await new Promise(r => setTimeout(r, 100));
+      }
+      
+      setIsFullyCached(true);
+      setDownloadProgress(null);
+    } catch (e) {
+      console.error("Bulk download failed:", e);
+      setDownloadProgress(null);
+      alert("Offline download failed. Please check your internet connection.");
+    }
   };
 
   const localizedReciters = getLocalizedReciters(settings.language);
 
   return (
-    <div className="p-6 space-y-10 pb-32 max-w-3xl mx-auto">
+    <div className="p-6 space-y-10 pb-32 max-w-3xl mx-auto transition-all duration-500">
       <div className="flex items-center gap-4">
         <h2 className="text-3xl font-black text-slate-900 dark:text-white leading-tight">{t.settings_title}</h2>
       </div>
+
+      {/* Offline Management Section */}
+      <section className="space-y-4">
+        <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] px-1">{t.settings_offline_title}</h3>
+        <div className={`p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border shadow-sm space-y-6 transition-all duration-500 ${isAiSpeaking ? 'border-emerald-500 ring-4 ring-emerald-500/10' : 'border-slate-100 dark:border-slate-800'}`}>
+          <div className="flex justify-between items-center gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-base font-black text-slate-800 dark:text-slate-100">{t.settings_offline_desc}</p>
+                {isAiSpeaking && (
+                   <div className="flex gap-0.5 items-end h-4 pb-1">
+                      <div className="w-0.5 h-1.5 bg-emerald-500 animate-[bounce_0.6s_infinite_0s]"></div>
+                      <div className="w-0.5 h-3 bg-emerald-500 animate-[bounce_0.6s_infinite_0.1s]"></div>
+                      <div className="w-0.5 h-2 bg-emerald-500 animate-[bounce_0.6s_infinite_0.2s]"></div>
+                   </div>
+                )}
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Approx. 15MB Storage</p>
+            </div>
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${isAiSpeaking ? 'bg-emerald-600 text-white animate-pulse' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'}`}>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            </div>
+          </div>
+          
+          {downloadProgress ? (
+            <div className="space-y-3">
+               <div className="flex justify-between items-end px-1">
+                 <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{t.settings_offline_downloading}</span>
+                 <span className="text-[11px] font-black text-slate-400">{downloadProgress.current} / {downloadProgress.total}</span>
+               </div>
+               <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                 <div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${(downloadProgress.current / downloadProgress.total) * 100}%` }}></div>
+               </div>
+            </div>
+          ) : isFullyCached ? (
+            <div className="bg-emerald-50 dark:bg-emerald-950/30 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800 flex items-center gap-3">
+              <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+              <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">{t.settings_offline_ready}</span>
+            </div>
+          ) : (
+            <button 
+              onClick={handleDownloadAll}
+              className="w-full py-5 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-lg hover:bg-emerald-700"
+            >
+              {t.settings_offline_btn}
+            </button>
+          )}
+        </div>
+      </section>
+
+      {/* User Profile Section */}
+      <section className="space-y-4">
+        <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] px-1">{settings.language === 'bn' ? 'আপনার প্রোফাইল' : 'Your Profile'}</h3>
+        <div className="p-6 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+          <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">{settings.language === 'bn' ? 'আপনার নাম' : 'Your Name'}</label>
+          <div className="relative">
+            <input 
+              type="text" 
+              placeholder={settings.language === 'bn' ? 'নাম লিখুন...' : 'Enter your name...'}
+              value={settings.userName}
+              onChange={(e) => updateSetting('userName', e.target.value)}
+              className="w-full p-5 bg-slate-50 dark:bg-slate-950 dark:text-white rounded-2xl border-none outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all font-black text-slate-900"
+            />
+            <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="space-y-4">
         <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] px-1">{t.settings_general}</h3>
@@ -75,7 +220,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, onNa
         </div>
       </section>
 
-      {/* New AI Assistant Voice Selection Section */}
+      {/* Assistant Voice Selection Section */}
       <section className="space-y-4">
         <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] px-1">Assistant Voice</h3>
         <div className="p-6 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">

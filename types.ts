@@ -30,6 +30,7 @@ export interface Reciter {
 export type Language = 'bn' | 'en' | 'hi' | 'ar';
 
 export interface AppSettings {
+  userName: string;
   arabicFontSize: number;
   banglaFontSize: number;
   isDarkMode: boolean;
@@ -39,4 +40,4 @@ export interface AppSettings {
   liveVoiceName: string;
 }
 
-export type ViewMode = 'surahList' | 'ayahView' | 'favorites' | 'search' | 'settings' | 'audioBook' | 'developer' | 'prayerTimes' | 'hadith' | 'liveVoice';
+export type ViewMode = 'surahList' | 'ayahView' | 'favorites' | 'search' | 'settings' | 'audioBook' | 'developer' | 'prayerTimes' | 'hadith' | 'liveVoice' | 'ramadanSpecial';

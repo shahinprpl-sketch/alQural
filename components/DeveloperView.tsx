@@ -24,7 +24,7 @@ const DeveloperView: React.FC<DeveloperViewProps> = ({ onBack, t }) => {
     const fetchInspiration = async () => {
       setLoadingInspiration(true);
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const targetLang = t.app_title === 'আল-কুরআন' ? 'Bangla' : t.app_title === 'अल-क़ुरान' ? 'Hindi' : 'English';
+      const targetLang = t.app_title === 'আল-কুরআন' ? 'Bangla' : t.app_title === 'अल-क़ুরान' ? 'Hindi' : 'English';
       try {
         const response = await ai.models.generateContent({
           model: "gemini-3-flash-preview",
@@ -53,9 +53,20 @@ const DeveloperView: React.FC<DeveloperViewProps> = ({ onBack, t }) => {
   ];
 
   return (
-    <div className="flex flex-col min-h-full pb-32 bg-[#f8fafc] dark:bg-slate-900 overflow-x-hidden">
-      <div className="h-44 shrink-0 bg-slate-900 dark:bg-slate-800 relative">
-        <button onClick={onBack} className="absolute top-6 left-6 p-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-white backdrop-blur-md transition-all z-20">
+    <div className="flex flex-col min-h-full pb-32 bg-[#f8fafc] dark:bg-slate-900 overflow-x-hidden transition-colors duration-500">
+      <div className="h-44 shrink-0 bg-slate-900 dark:bg-slate-800 relative overflow-hidden">
+        {/* Subtle background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          </svg>
+        </div>
+        <button onClick={onBack} className="absolute top-6 left-6 p-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-white backdrop-blur-md transition-all z-20 active:scale-90">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
         </button>
       </div>
@@ -82,30 +93,71 @@ const DeveloperView: React.FC<DeveloperViewProps> = ({ onBack, t }) => {
         </div>
       </div>
 
-      <div className="p-6 space-y-6 flex-1">
-        {/* Highlighted Donation Section */}
-        <div className="bg-gradient-to-br from-rose-600 to-rose-700 dark:from-rose-800 dark:to-rose-950 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden group ring-4 ring-rose-500/30 animate-pulse-subtle">
-            {/* Animated Shine Effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shine transition-all"></div>
-            
-            {/* Decorative Heart Icon in the Highlighted Area */}
-            <div className="absolute top-8 right-8 text-white/20 group-hover:text-white/40 transition-colors animate-float">
-               <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <div className="p-6 space-y-8 flex-1">
+        {/* Highlighted Donation Section - Centerpiece */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Support our Mission</h4>
+            <div className="flex gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse delay-75"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse delay-150"></span>
             </div>
+          </div>
 
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-6">
-                <span className="inline-block bg-white/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md">Sadaqah Jariyah</span>
-                <span className="inline-block bg-amber-400 text-slate-900 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest">Featured</span>
+          <div className="bg-gradient-to-br from-rose-600 via-rose-700 to-rose-900 dark:from-rose-800 dark:to-black rounded-[3rem] p-8 text-white shadow-2xl relative overflow-hidden group border-2 border-rose-400/30">
+              {/* Dynamic Animated Shine Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine transition-all pointer-events-none duration-1000"></div>
+              
+              {/* Animated Glowing Particles Background */}
+              <div className="absolute inset-0 opacity-20 pointer-events-none">
+                <div className="absolute top-10 left-10 w-2 h-2 bg-white rounded-full animate-float-slow"></div>
+                <div className="absolute bottom-20 right-10 w-3 h-3 bg-white rounded-full animate-float-fast"></div>
+                <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-white rounded-full animate-float"></div>
               </div>
-              <h4 className="font-black text-2xl mb-4 leading-tight">{t.dev_donate_cta_title}</h4>
-              <p className="text-xs text-white/80 leading-relaxed mb-10 font-medium">{t.dev_donate_cta_desc}</p>
-              <button onClick={() => setShowDonatePopup(true)} className="w-full bg-white text-rose-700 py-5 rounded-[1.75rem] font-black text-sm shadow-[0_20px_40px_-10px_rgba(255,255,255,0.4)] active:scale-[0.97] transition-all hover:bg-slate-50 flex items-center justify-center gap-3">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                  {t.dev_donate_btn}
-              </button>
-            </div>
-        </div>
+
+              {/* Decorative Heart Icon */}
+              <div className="absolute -top-6 -right-6 text-white/10 group-hover:text-white/20 transition-all duration-1000 group-hover:rotate-12 group-hover:scale-110">
+                 <svg className="w-48 h-48" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+              </div>
+
+              <div className="relative z-10 space-y-6">
+                <div className="flex items-center gap-3">
+                  <span className="inline-block bg-white/20 backdrop-blur-md px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/20 shadow-sm">
+                    Sadaqah Jariyah
+                  </span>
+                  <div className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.8)]"></div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-black text-3xl leading-tight tracking-tight">{t.dev_donate_cta_title}</h4>
+                  <p className="text-[13px] text-white/80 leading-relaxed font-medium max-w-[280px]">{t.dev_donate_cta_desc}</p>
+                </div>
+
+                {/* Impact List */}
+                <div className="grid grid-cols-1 gap-3 pt-2">
+                   {[t.donate_impact_1, t.donate_impact_2, t.donate_impact_3].map((impact, idx) => (
+                     <div key={idx} className="flex items-center gap-3 bg-white/5 backdrop-blur-sm p-3 rounded-2xl border border-white/10">
+                        <div className="w-6 h-6 bg-rose-500 rounded-lg flex items-center justify-center shrink-0">
+                           <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        <span className="text-[11px] font-bold text-white/90">{impact}</span>
+                     </div>
+                   ))}
+                </div>
+
+                <div className="pt-6">
+                  <button 
+                    onClick={() => setShowDonatePopup(true)} 
+                    className="w-full bg-white text-rose-800 py-5 rounded-3xl font-black text-sm shadow-[0_20px_50px_-10px_rgba(0,0,0,0.3)] active:scale-[0.96] transition-all hover:shadow-[0_25px_60px_-10px_rgba(255,255,255,0.4)] flex items-center justify-center gap-3 hover:bg-rose-50 group/btn"
+                  >
+                      <svg className="w-5 h-5 group-hover/btn:scale-125 transition-transform" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                      {t.dev_donate_btn}
+                  </button>
+                </div>
+              </div>
+          </div>
+        </section>
 
         <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm text-center">
             <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 mb-4 italic">{t.dev_inspiration_title}</p>
@@ -126,57 +178,62 @@ const DeveloperView: React.FC<DeveloperViewProps> = ({ onBack, t }) => {
         .animate-shine {
           animation: shine 3s infinite linear;
         }
-        @keyframes pulse-subtle {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.01); }
+        @keyframes float-slow {
+          0%, 100% { transform: translate(0, 0); opacity: 0.2; }
+          50% { transform: translate(20px, -30px); opacity: 0.5; }
         }
-        .animate-pulse-subtle {
-          animation: pulse-subtle 4s infinite ease-in-out;
+        @keyframes float-fast {
+          0%, 100% { transform: translate(0, 0); opacity: 0.1; }
+          50% { transform: translate(-30px, -50px); opacity: 0.4; }
         }
         @keyframes float {
-          0%, 100% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(-10px) scale(1.1); }
+          0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+          50% { transform: translateY(-15px) scale(1.2); opacity: 0.6; }
         }
-        .animate-float {
-          animation: float 3s infinite ease-in-out;
-        }
+        .animate-float-slow { animation: float-slow 8s infinite ease-in-out; }
+        .animate-float-fast { animation: float-fast 5s infinite ease-in-out; }
+        .animate-float { animation: float 3.5s infinite ease-in-out; }
       `}</style>
 
       {showDonatePopup && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-8 animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setShowDonatePopup(false)}></div>
-          <div className="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[3rem] shadow-2xl relative z-10 animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md" onClick={() => setShowDonatePopup(false)}></div>
+          <div className="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[3.5rem] shadow-2xl relative z-10 animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-hidden flex flex-col border border-slate-100 dark:border-slate-700">
              
-             <div className="px-8 pt-10 pb-4 shrink-0 flex justify-between items-start">
+             <div className="px-10 pt-20 pb-6 shrink-0 flex justify-between items-start">
                 <div className="space-y-1">
-                  <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Select Sadaqah</h3>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Support this project</p>
+                  <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Choose Method</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select your preferred Sadaqah channel</p>
                 </div>
-                <button onClick={() => setShowDonatePopup(false)} className="text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors p-2.5 bg-slate-50 dark:bg-slate-900/50 rounded-full">
+                <button onClick={() => setShowDonatePopup(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors p-3 bg-slate-50 dark:bg-slate-900/80 rounded-full active:scale-90">
                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
              </div>
              
              <div className="px-8 pb-10 space-y-4 overflow-y-auto scrollbar-hide flex-1">
-                <div className="bg-emerald-50 dark:bg-emerald-900/10 p-5 rounded-3xl border border-emerald-100/50 dark:border-emerald-800/50 mb-2">
-                   <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 leading-relaxed text-center italic">
+                <div className="bg-emerald-50 dark:bg-emerald-900/10 p-6 rounded-3xl border border-emerald-100 dark:border-emerald-800/50 mb-4">
+                   <p className="text-[12px] font-bold text-emerald-800 dark:text-emerald-400 leading-relaxed text-center italic">
                      {t.donate_baraka || "Jazakumullahu Khairan! May Allah grant you a great reward."}
                    </p>
                 </div>
 
                 {donationMethods.map((method) => (
-                  <div key={method.name} onClick={() => copyToClipboard(method.value, method.name)} className="p-5 bg-slate-50 dark:bg-slate-900/40 rounded-[2rem] flex items-center justify-between cursor-pointer active:scale-95 transition-all border border-transparent hover:border-emerald-500/20 group relative overflow-hidden">
+                  <div 
+                    key={method.name} 
+                    onClick={() => copyToClipboard(method.value, method.name)} 
+                    className={`p-6 bg-slate-50 dark:bg-slate-900/60 rounded-[2.5rem] flex items-center justify-between cursor-pointer active:scale-[0.98] transition-all border-2 ${copiedLabel === method.name ? 'border-emerald-500 bg-emerald-50/20' : 'border-transparent hover:border-emerald-500/10'} group relative overflow-hidden`}
+                  >
                     <div className="flex flex-col relative z-10 pr-4">
-                      <p className="font-black text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-widest">{method.name}</p>
-                      <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 leading-tight mt-0.5">{method.sub}</p>
-                      <span className="text-slate-900 dark:text-slate-200 font-black text-xl mt-1 block tracking-tight">{method.value}</span>
+                      <p className="font-black text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-[0.2em]">{method.name}</p>
+                      <p className="text-[11px] font-bold text-slate-400 dark:text-slate-600 leading-tight mt-1">{method.sub}</p>
+                      <span className="text-slate-900 dark:text-white font-black text-2xl mt-2 block tracking-tighter">{method.value}</span>
                     </div>
                     <div className="flex flex-col items-center gap-1 shrink-0">
-                       <div className={`p-3 rounded-2xl transition-all ${copiedLabel === method.name ? 'bg-emerald-500 text-white' : 'bg-white dark:bg-slate-800 text-slate-300'}`}>
+                       <div className={`p-4 rounded-2xl shadow-sm transition-all ${copiedLabel === method.name ? 'bg-emerald-600 text-white scale-110' : 'bg-white dark:bg-slate-800 text-slate-300'}`}>
                           {copiedLabel === method.name ? (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path></svg>
                           ) : (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                           )}
                        </div>
                     </div>
@@ -184,9 +241,9 @@ const DeveloperView: React.FC<DeveloperViewProps> = ({ onBack, t }) => {
                 ))}
              </div>
 
-             <div className="px-10 pb-10 pt-4 shrink-0 bg-white dark:bg-slate-800 border-t border-slate-50 dark:border-slate-700/50">
-                <button onClick={() => setShowDonatePopup(false)} className="w-full py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-[11px] uppercase tracking-[0.3em] rounded-2xl shadow-xl active:scale-95 transition-all">
-                  Close
+             <div className="px-10 pb-10 pt-6 shrink-0 bg-white dark:bg-slate-800 border-t border-slate-50 dark:border-slate-700/50">
+                <button onClick={() => setShowDonatePopup(false)} className="w-full py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-[12px] uppercase tracking-[0.4em] rounded-[1.75rem] shadow-xl active:scale-95 transition-all">
+                  Done
                 </button>
              </div>
           </div>
