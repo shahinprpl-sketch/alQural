@@ -162,26 +162,6 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, setSettings, onNa
         </div>
       </section>
 
-      {/* User Profile Section */}
-      <section className="space-y-4">
-        <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] px-1">{settings.language === 'bn' ? 'আপনার প্রোফাইল' : 'Your Profile'}</h3>
-        <div className="p-6 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
-          <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">{settings.language === 'bn' ? 'আপনার নাম' : 'Your Name'}</label>
-          <div className="relative">
-            <input 
-              type="text" 
-              placeholder={settings.language === 'bn' ? 'নাম লিখুন...' : 'Enter your name...'}
-              value={settings.userName}
-              onChange={(e) => updateSetting('userName', e.target.value)}
-              className="w-full p-5 bg-slate-50 dark:bg-slate-950 dark:text-white rounded-2xl border-none outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all font-black text-slate-900"
-            />
-            <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section className="space-y-4">
         <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] px-1">{t.settings_general}</h3>
         
