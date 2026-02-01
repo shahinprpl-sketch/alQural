@@ -1,4 +1,3 @@
-
 const CACHE_NAME = 'al-quran-v2.1-offline';
 const STATIC_ASSETS = [
   './',
@@ -25,11 +24,11 @@ const EXTERNAL_HOSTS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Precaching static shell');
-      // Using a wrapper to ensure failure of one asset doesn't break the whole install
       return Promise.allSettled(
         STATIC_ASSETS.map(url => 
-          fetch(url, { mode: 'no-cors' }).then(res => cache.put(url, res))
+          fetch(url).then(res => {
+            if (res.ok) cache.put(url, res);
+          })
         )
       );
     })
@@ -53,12 +52,21 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch Event - Stale-While-Revalidate strategy
+// Fetch Event - Network First for logic files, Stale-While-Revalidate for static
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Only handle GET requests
   if (event.request.method !== 'GET') return;
+
+  // For app logic files, always try network first to avoid caching bugs during development
+  const isAppFile = url.pathname.endsWith('.tsx') || url.pathname.endsWith('.ts') || url.pathname.endsWith('index.tsx');
+
+  if (isAppFile) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
 
   const isExternalAllowed = EXTERNAL_HOSTS.some(host => url.host.includes(host));
   const isLocal = url.origin === self.location.origin;
@@ -67,18 +75,14 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
         const fetchPromise = fetch(event.request).then((networkResponse) => {
-          // Cache status 200 (OK) and status 0 (Opaque/Cross-origin)
-          if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
+          if (networkResponse && networkResponse.status === 200) {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseToCache);
             });
           }
           return networkResponse;
-        }).catch((err) => {
-          if (cachedResponse) return cachedResponse;
-          throw err;
-        });
+        }).catch(() => cachedResponse);
 
         return cachedResponse || fetchPromise;
       })
